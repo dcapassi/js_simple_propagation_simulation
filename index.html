@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="FSPL - Simulation">
+    <meta name="author" content="1HundredWireless">
+    <title>FSPL - Simulation</title>
+    <!-- Link to CSS file -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        .container {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            padding: 20px;
+            gap: 20px;
+        }
+        .canvas-container {
+            position: relative;
+        }
+        .canvas-container canvas {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .x-axis {
+            text-align: center;
+            align-items: center;
+            display: flex;
+            margin-top: 5px;
+            font-size: 12px;
+            justify-content: center;
+            color: #333;
+        }
+        .controls {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+        .controls h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .controls label {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .controls input, .controls select, .controls button {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.05);
+        }
+        .controls button {
+            background-color: #007BFF;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .controls button:hover {
+            background-color: #0056b3;
+        }
+        .tooltip {
+            position: absolute;
+            display: none;
+            background: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            pointer-events: none;
+            font-size: 14px;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #333;
+            color: #fff;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Canvas Section -->
+        <div class="canvas-container">
+            <canvas id="simulationCanvas" width="800" height="500">
+                Your browser does not support the canvas element.
+            </canvas>
+            <div class="x-axis">
+                <span style="text-align: center;">800 x 500 meters</span>
+            </div>
+            <div id="tooltip" class="tooltip"></div>
+ 
+        </div>
+
+        <!-- Controls Section -->
+        <div class="controls">
+            <h3>Simulation Controls</h3>
+
+            <label for="txPowerInput">TX Power (mW):</label>
+            <input id="txPowerInput" type="number" value="100">
+
+            <label for="txHeightInput">TX Height (m):</label>
+            <input id="txHeightInput" type="number" value="0">
+
+            <label for="frequencySelect">Frequency (GHz):</label>
+            <select id="frequencySelect">
+                <option value="5GHz_2.4e+9">2.4 GHz</option>
+                <option value="2-4GHz_5e+9">5 GHz</option>
+            </select>
+
+            <label for="antennaType">Antenna:</label>
+            <select id="antennaType">
+                <option value="OMNI">Omni</option>
+                <option value="DIRECTIONAL">Directional</option>
+            </select>
+
+            <button id="applySettingsButton">Apply Settings</button>
+        </div>
+    </div>
+
+    <div class="footer">
+        &copy; 2024 1HundredWireless. All rights reserved.
+    </div>
+
+    <!-- Link to JavaScript file -->
+    <script src="./antenna/omni.js"></script>
+    <script src="./antenna/directional_24GHz.js"></script>
+    <script src="./antenna/directional_5GHz.js"></script>
+    <script src="./classes/Transmitter.js"></script>
+    <script src="./classes/CanvasPlot.js"></script>
+    <script src="script.js"></script>
+    <script src="events.js"></script>
+
+</body>
+
+</html>
