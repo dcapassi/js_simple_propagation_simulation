@@ -3,7 +3,7 @@ let TX_HEIGHT = 0
 let TX_FREQUENCY = 2.4e+9
 let jsonGainData = OMNI_GAIN
 let wall_list = []
-let show_tooltip = false
+let show_tooltip = true
 
 const canvas = document.getElementById('simulationCanvas');
 ROWS = canvas.width
