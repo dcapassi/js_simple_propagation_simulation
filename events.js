@@ -7,7 +7,9 @@ document.addEventListener('click',(e)=>{
     const mouseY = e.clientY - rect.top;
 
     transmitter = new Transmitter(mouseX, mouseY, TX_POWER, TX_HEIGHT, TX_FREQUENCY);
-    plot.calculateAndDrawSignalStrengthGain(transmitter,jsonGainData)
+    //plot.calculateAndDrawSignalStrengthGain(transmitter,jsonGainData)
+    plot.calculateAndDrawSignalStrengthGainWallDetection(transmitter,jsonGainData)
+    plot.drawWalls()
     transmitter.draw(context);
 
     //plot.drawGrid();
@@ -44,7 +46,9 @@ document.getElementById('applySettingsButton').addEventListener('click', () => {
         jsonGainData = OMNI_GAIN
     }
     context.clearRect(0, 0, canvas.width, canvas.height);
-    plot.calculateAndDrawSignalStrengthGain(transmitter,jsonGainData)
+    //plot.calculateAndDrawSignalStrengthGain(transmitter,jsonGainData)
+    plot.calculateAndDrawSignalStrengthGainWallDetection(transmitter,jsonGainData)
+    plot.drawWalls()
 
     transmitter.draw(context);
 
@@ -52,7 +56,7 @@ document.getElementById('applySettingsButton').addEventListener('click', () => {
 
 
 document.addEventListener('mousemove', (e)=>{
-    if (e.target === canvas){
+    if (e.target === canvas && show_tooltip == true){
 
         const rect = canvas.getBoundingClientRect();
         const mouseX = e.clientX - rect.left;
@@ -61,7 +65,7 @@ document.addEventListener('mousemove', (e)=>{
         const signalStrength = transmitter.txPower - transmitter.calculateFPSL(mouseX, mouseY, 0);
 
         const angle = calculateAngle(transmitter, mouseX, mouseY);
-        const gain = getGainFromJson(jsonGainData, angle);
+        const gain = getGainAtAngle(angle,jsonGainData);
 
         const adjustedSignalStrength = signalStrength + gain;
         const distanceTooltip = transmitter.calculateDistance(mouseX, mouseY,0)
@@ -73,7 +77,8 @@ document.addEventListener('mousemove', (e)=>{
         tooltip.innerHTML = 
         "RSSI: " + adjustedSignalStrength.toFixed(0) + " dBm" + "<br>" +
         "Distance: " + distanceTooltip.toFixed(0) + " m" + "<br>" +
-        "FSPL: " + FSPLTooltip.toFixed(0) + " dB";
+        "FSPL: " + FSPLTooltip.toFixed(0) + " dB" + "<br>"+
+        "Angle: " + angle.toFixed(0) + " Degrees";
 
     } else{
         tooltip.style.display = 'none';
