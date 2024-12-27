@@ -62,7 +62,15 @@ document.addEventListener('mousemove', (e)=>{
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
 
-        const signalStrength = transmitter.txPower - transmitter.calculateFPSL(mouseX, mouseY, 0);
+        let loss = 0
+        wall_list.forEach( wall => {
+            let cross_wall = plot.checkIfLineCrosses(transmitter,mouseX,mouseY,wall)
+            if(cross_wall){
+                loss = loss + wall.walltype.attenuation
+            }
+        })
+
+        const signalStrength = transmitter.txPower - transmitter.calculateFPSL(mouseX, mouseY, 0) - loss;
 
         const angle = calculateAngle(transmitter, mouseX, mouseY);
         const gain = getGainAtAngle(angle,jsonGainData);
@@ -78,7 +86,9 @@ document.addEventListener('mousemove', (e)=>{
         "RSSI: " + adjustedSignalStrength.toFixed(0) + " dBm" + "<br>" +
         "Distance: " + distanceTooltip.toFixed(0) + " m" + "<br>" +
         "FSPL: " + FSPLTooltip.toFixed(0) + " dB" + "<br>"+
-        "Angle: " + angle.toFixed(0) + " Degrees";
+        "Angle: " + angle.toFixed(0) + " Degrees" + "<br>"+
+        "Gain: "+ gain.toFixed(0) + " dBi" + "<br>"+
+        "Wall Attenuation: " + loss + " dB";
 
     } else{
         tooltip.style.display = 'none';
