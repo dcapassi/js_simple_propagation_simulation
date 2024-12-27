@@ -1,3 +1,4 @@
+let ANGLE = 0
 function calculateAngle(transmitter, x, y) {
     const dx = x - transmitter.x;
     const dy = y - transmitter.y;
@@ -6,12 +7,43 @@ function calculateAngle(transmitter, x, y) {
     return angle;
 }
 
-function getGainFromJson(json, angle) {
-    const closest = json.reduce((prev, curr) => (
-        Math.abs(curr.angle - angle) < Math.abs(prev.angle - angle) ? curr : prev
-    ));
-    return closest.gain;
+
+function getGainAtAngle(angle, antenna_gain_list) {
+    angle = (angle + 360) % 360;
+
+    let lower = null;
+    let upper = null;
+
+    for (let i = 0; i < antenna_gain_list.length; i++) {
+        const current = antenna_gain_list[i];
+        
+        if (current.angle === angle) {
+            return current.gain; // Exact match
+        }
+
+        if (current.angle < angle) {
+            lower = current;
+        } else if (current.angle > angle && upper === null) {
+            upper = current;
+            break; 
+        }
+    }
+
+    if (!upper) {
+        upper = antenna_gain_list[0];
+    }
+
+    // Linear interpolation between lower and upper
+    if (lower && upper) {
+
+        const ratio = (angle - lower.angle) / (upper.angle - lower.angle);
+        const interpolatedGain = lower.gain + ratio * (upper.gain - lower.gain);
+        return interpolatedGain;
+    }
+
+    return undefined;
 }
+
 
 class CanvasPlot {
     constructor(canvas, rows, cols) {
@@ -69,14 +101,14 @@ class CanvasPlot {
 
 
 
-    calculateAndDrawSignalStrengthGain(transmitter, json) {
+    calculateAndDrawSignalStrengthGain(transmitter, antenna_gain_list) {
         for (let row = 0; row < this.rows; row++) {
             for (let col = 0; col < this.cols; col++) {
                 const { centerX, centerY } = this.getCellCenter(row, col);
                 const signalStrength = transmitter.txPower - transmitter.calculateFPSL(centerX, centerY, 0);
 
                 const angle = calculateAngle(transmitter, centerX, centerY);
-                const gain = getGainFromJson(json, angle);
+                const gain = getGainAtAngle(angle, antenna_gain_list)
 
                 const adjustedSignalStrength = signalStrength + gain;
 
@@ -90,7 +122,7 @@ class CanvasPlot {
 
                 this.context.fillRect(col * this.cellWidth, row * this.cellHeight, cellWidth, cellHeight);
                 
-                if(false){
+                if(true){
                     this.context.font = "10px Arial";
                     this.context.fillStyle = "black";
                     this.context.textAlign = "center";
@@ -130,7 +162,7 @@ class CanvasPlot {
         }
     }
 
-
+    
     calculateAndDrawSignalStrength(transmitter) {
         for (let row = 0; row < this.rows; row++) {
             for (let col = 0; col < this.cols; col++) {
@@ -180,6 +212,62 @@ class CanvasPlot {
         return "gray"; // Default color if no range matches
     }
 
+
+    calculateAndDrawSignalStrengthGainWallDetection(transmitter, antenna_gain_list) {
+        for (let row = 0; row < this.rows; row++) {
+            for (let col = 0; col < this.cols; col++) {
+                const { centerX, centerY } = this.getCellCenter(row, col);
+                const signalStrength = transmitter.txPower - transmitter.calculateFPSL(centerX, centerY, 0);
+
+                const angle = calculateAngle(transmitter, centerX, centerY);
+                const gain = getGainAtAngle(angle, antenna_gain_list)
+                let loss = 0
+                wall_list.forEach( wall => {
+                    let cross_wall = this.checkIfLineCrosses(transmitter,row,col,wall)
+                    if(cross_wall){
+                        loss = loss + wall.walltype.attenuation
+                    }
+                })
+
+                const adjustedSignalStrength = signalStrength + gain - loss;
+
+         
+                const color = this.getSignalColor(adjustedSignalStrength);
+
+                this.context.fillStyle = color;
+
+                const cellWidth = (col === this.cols - 1) ? this.canvas.width - col * this.cellWidth : this.cellWidth;
+                const cellHeight = (row === this.rows - 1) ? this.canvas.height - row * this.cellHeight : this.cellHeight;
+
+                this.context.fillRect(col * this.cellWidth, row * this.cellHeight, cellWidth, cellHeight);
+                
+                if(false){
+                    this.context.font = "10px Arial";
+                    this.context.fillStyle = "black";
+                    this.context.textAlign = "center";
+                    this.context.fillText(adjustedSignalStrength.toFixed(2), centerX, centerY);
+                }
+            }
+        }
+    }
+
+    drawWalls(){
+
+        wall_list.forEach(wall =>{
+
+            this.context.beginPath();
+            this.context.moveTo(wall.p1x,wall.p1y)
+            this.context.lineTo(wall.p2x,wall.p2y)
+            this.context.lineWidth = 5;
+            this.context.strokeStyle = wall.walltype.color
+            this.context.stroke();
+            this.context.lineWidth = 1;
+
+
+        })
+
+    }
+
     drawGrid() {
         this.context.strokeStyle = "gray";
         for (let row = 0; row <= this.rows; row++) {
@@ -198,4 +286,110 @@ class CanvasPlot {
             this.context.stroke();
         }
     }
+
+
+    showLineToTransmitter(transmitter) {
+        for (let row = 0; row < this.rows; row++) {
+            for (let col = 0; col < this.cols; col++) {
+                const { centerX, centerY } = this.getCellCenter(row, col);
+                this.context.beginPath();
+                this.context.moveTo(centerX, centerY);
+                this.context.lineTo(transmitter.x, transmitter.y);
+                this.context.stroke();
+
+
+                this.context.font = "12px Arial";
+                this.context.fillStyle = "black";
+                this.context.textAlign = "center";
+                this.context.fillText(this.checkIfLineCrosses(transmitter, row, col, wall), centerX, centerY);
+            }
+        }
+    }
+
+    showLineToTransmitterSingleCell(transmitter,row,col) {
+                const { centerX, centerY } = this.getCellCenter(row, col);
+                this.context.beginPath();
+                this.context.moveTo(centerX, centerY);
+                this.context.lineTo(transmitter.x, transmitter.y);
+                this.context.stroke();
+
+
+                this.context.font = "12px Arial";
+                this.context.fillStyle = "black";
+                this.context.textAlign = "center";
+                showLineToTransmitterthis.context.fillText(this.checkIfLineCrosses(transmitter, row, col), centerX, centerY);
+
+
+    }
+
+
+    checkIfLineCrosses(transmitter,row,col,wall) {
+        const { centerX, centerY } = this.getCellCenter(row, col);
+        //Creating the point the wall
+        const W1 = create_point(wall.p1x, wall.p1y)
+        const W2 = create_point(wall.p2x, wall.p2y)
+
+
+        //Creating the Transmitter
+        const T1 = create_point(transmitter.x, transmitter.y)
+        const T2 = create_point(centerX, centerY)
+
+
+        // Creating the vectors
+        const W_vector = create_vector(W1,W2)
+        const T_vector = create_vector(T1,T2)
+        const T1_W1_vector = create_vector(T1,W1)
+        const T1_W2_vector = create_vector(T1,W2)
+        const W1_T1_vector = create_vector(W1,T1)
+        const W1_T2_vector = create_vector(W1,T2)
+
+
+        // Doing the cross product
+        const cross1 = cross_product(T_vector,T1_W1_vector)
+        const cross2 = cross_product(T_vector,T1_W2_vector)
+        const cross3 = cross_product(W_vector,W1_T1_vector)
+        const cross4 = cross_product(W_vector,W1_T2_vector)
+
+
+        if (cross1 * cross2 < 0 && cross3 * cross4 < 0){
+            return true}
+
+        // Special case: Check if points lie on the same line (collinear)
+        const isCollinear = (cross1 === 0 && isPointOnSegment(W1, T1, T2)) ||
+        (cross2 === 0 && isPointOnSegment(W2, T1, T2)) ||
+        (cross3 === 0 && isPointOnSegment(T1, W1, W2)) ||
+        (cross4 === 0 && isPointOnSegment(T2, W1, W2));
+        if (isCollinear) {
+        return true;
+        }
+    
+
+}
+
+
+}
+
+function cross_product(vector1,vector2){
+    return vector1[0] * vector2[1] - vector1[1] * vector2[0]
+  }
+
+  function create_vector(point1,point2){
+    return [point2.x - point1.x, point2.y - point1.y]
+  }
+
+  
+  function create_point(x,y){
+    return {x:x, y:y}
+  }
+
+  function isPointOnSegment(point, segStart, segEnd) {
+    const minX = Math.min(segStart.x, segEnd.x);
+    const maxX = Math.max(segStart.x, segEnd.x);
+    const minY = Math.min(segStart.y, segEnd.y);
+    const maxY = Math.max(segStart.y, segEnd.y);
+
+    return (
+        point.x >= minX && point.x <= maxX &&
+        point.y >= minY && point.y <= maxY
+    );
 }

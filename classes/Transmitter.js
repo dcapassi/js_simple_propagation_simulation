@@ -28,10 +28,10 @@ class Transmitter {
 
     draw(context) {
         context.beginPath();
-        context.arc(this.x, this.y, 5, 0, Math.PI * 2, true); // Circle with radius 20px
-        context.fillStyle = "blue"; // Fill color for the circle
+        context.arc(this.x, this.y, 5, 0, Math.PI * 2, true); 
+        context.fillStyle = "blue"; 
         context.fill();
-        context.strokeStyle = "black"; // Border color for the circle
+        context.strokeStyle = "black"; 
         context.stroke();
     }
 
