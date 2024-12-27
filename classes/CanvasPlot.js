@@ -223,7 +223,7 @@ class CanvasPlot {
                 const gain = getGainAtAngle(angle, antenna_gain_list)
                 let loss = 0
                 wall_list.forEach( wall => {
-                    let cross_wall = this.checkIfLineCrosses(transmitter,row,col,wall)
+                    let cross_wall = this.checkIfLineCrosses(transmitter,centerX,centerY,wall)
                     if(cross_wall){
                         loss = loss + wall.walltype.attenuation
                     }
@@ -301,7 +301,7 @@ class CanvasPlot {
                 this.context.font = "12px Arial";
                 this.context.fillStyle = "black";
                 this.context.textAlign = "center";
-                this.context.fillText(this.checkIfLineCrosses(transmitter, row, col, wall), centerX, centerY);
+                this.context.fillText(this.checkIfLineCrosses(transmitter, centerX, centerY, wall), centerX, centerY);
             }
         }
     }
@@ -317,14 +317,13 @@ class CanvasPlot {
                 this.context.font = "12px Arial";
                 this.context.fillStyle = "black";
                 this.context.textAlign = "center";
-                showLineToTransmitterthis.context.fillText(this.checkIfLineCrosses(transmitter, row, col), centerX, centerY);
+                showLineToTransmitterthis.context.fillText(this.checkIfLineCrosses(transmitter, centerX, centerY), centerX, centerY);
 
 
     }
 
 
-    checkIfLineCrosses(transmitter,row,col,wall) {
-        const { centerX, centerY } = this.getCellCenter(row, col);
+    checkIfLineCrosses(transmitter,centerX,centerY,wall) {
         //Creating the point the wall
         const W1 = create_point(wall.p1x, wall.p1y)
         const W2 = create_point(wall.p2x, wall.p2y)
